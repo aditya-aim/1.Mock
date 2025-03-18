@@ -1,0 +1,6 @@
+flask
+transitions
+langchain
+python-dotenv
+openai
+langchain_community
