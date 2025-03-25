@@ -1,146 +1,141 @@
-# AI Interview Agent - Mock Interview API Documentation
+# AI Interview Agent - Mock Interview API
 
-This API allows you to simulate an interview process with a candidate using GPT-4o. It generates professional questions, handles candidate responses, and evaluates the interview.
+A Flask-based API that simulates an AI-powered interview process using GPT-4. The API generates professional interview questions, handles candidate responses, and provides detailed evaluations.
 
----
+## 🚀 Quick Start
 
-## 🚀 How to Run
-
-### 1. **Create a Virtual Environment**
-
+1. **Setup Environment**
 ```bash
 python -m venv venv
-```
-
-### 2. **Activate the Virtual Environment**
-
-* **Windows:**
-
-```bash
+# Windows
 .\venv\Scripts\activate
-```
-
-* **MacOS/Linux:**
-
-```bash
+# MacOS/Linux
 source venv/bin/activate
-```
-
-### 3. **Install Requirements**
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. **Create `.env` File**
-
-Create a `.env` file in the root directory and add your OpenAI API key:
-
+2. **Configure Environment**
+Create `.env` file:
 ```plaintext
-OPENAI_API_KEY=sk-proj-...
+OPENAI_API_KEY=your-api-key-here
 ```
 
-### 5. **Run the App**
-
+3. **Run the Server**
 ```bash
 python app.py
 ```
+Server runs on `http://localhost:5022`
 
-### ✅ **Python Version**
+## 📚 API Documentation
 
-This project runs on **Python 3.12.7**
+### Base URL
+```
+http://localhost:5022
+```
 
----
+### Endpoints
 
-## 📌 API Endpoints
+#### 1. Start Interview
+Initiates a new interview session.
 
-### 1. **`/start`**
+**Endpoint:** `POST /start`
 
-Starts a new interview session and returns the first question.
-
-* **Request:**
-
-  `GET /start`
-* **Response:**
-
+**Request Body:**
 ```json
 {
-  "question": "Hello, and thank you for taking the time to speak with me today. To get us started, could you please tell me a little bit about yourself and your professional background? This will help us set the stage for our conversation and allow me to tailor my questions to your unique experiences and expertise."
+    "job_role": "Software Engineer",
+    "resume": "Candidate's resume text",
+    "job_description": "Job posting description",
+    "difficulty": "easy" // optional, defaults to "easy"
 }
 ```
 
----
-
-### 2. **`/respond`**
-
-Processes the candidate’s response and continues the interview.
-
-* **Request:**
-
-  `POST /respond`
-* **Request Body:**
-
+**Response:**
 ```json
 {
-  "response": "Thank you for having me. I have a background in computer science, and my interest in this field started when I was young, experimenting with coding and building small projects. Over time, I became passionate about solving complex problems and creating innovative solutions, which naturally led me to pursue a career in software development and AI."
+    "question": "First interview question"
 }
 ```
 
-* **Response:**
+#### 2. Submit Response
+Process candidate's response and continue the interview.
 
+**Endpoint:** `POST /respond`
+
+**Request Body:**
 ```json
 {
-  "message": "That's wonderful to hear about your journey into the field. As we begin our conversation, could you elaborate on any specific projects or experiences during your early years in computer science that were particularly influential in shaping your career path?"
+    "response": "Candidate's answer"
 }
 ```
 
-* **If the interview is completed:**
-
+**Response:**
 ```json
 {
-  "message": "Interview completed. Thank you for participating!",
-  "status": "completed"
+    "message": "Next question or interview completion message"
 }
 ```
 
----
-
-### 3. **`/evaluation`**
-
-Returns the evaluation of the interview once it’s completed.
-
-* **Request:**
-
-  `GET /evaluation`
-* **Response:**
-
+**Interview Completion Response:**
 ```json
 {
-  "evaluation": "**Introduction:**\nThe candidate introduces themselves with clarity and confidence, focusing on a significant achievement in their role. They effectively highlight the transition from a monolithic architecture to microservices, demonstrating an ability to communicate technical processes and outcomes succinctly.\n- **Score: 8/10**\n\n**Resume Overview:**\nThe candidate provides a relevant and comprehensive overview of their professional background, effectively connecting their past experiences to the successful implementation of complex systems. They articulate their skills in cloud platforms, containerization, and their leadership in transitioning to microservices.\n- **Score: 9/10**\n\n**Technical Evaluation:**\nThe candidate showcases a deep understanding of technical concepts such as event-driven architecture, service mesh implementation, and infrastructure-as-code. Their responses indicate strong problem-solving skills and the ability to implement scalable and maintainable solutions.\n- **Score: 9/10**\n\n**Behavioral Assessment:**\nThe candidate demonstrates strong communication skills, effective conflict resolution, and adaptability in leadership. They provide examples of managing team dynamics and fostering collaboration, indicating their ability to lead and work well in team settings.\n- **Score: 8/10**\n\n**Cultural Fit:**\nThe candidate aligns their personal values with those of the company, emphasizing collaboration, innovation, and inclusivity. They provide examples of initiatives like tech talks and team-building activities, which support a positive team environment and a culture of continuous learning.\n- **Score: 9/10**\n\n**Overall Summary:**\nThe candidate exhibits strong technical expertise and leadership abilities, with a clear alignment to company values. Their ability to articulate past experiences and solve complex problems makes them a strong candidate for roles involving system transformations and team leadership.\n- **Overall Score: 43/50**"
+    "status": "completed",
+    "message": "Interview completed. Thank you for participating!"
 }
 ```
 
----
+#### 3. Get Evaluation
+Retrieve the interview evaluation after completion.
 
-### 4. **`/context`**
+**Endpoint:** `GET /evaluation`
 
-Retrieves the current interview context, including exchanged messages between the candidate and interviewer. *(Hidden from UI in Version 1)*
+**Response:**
+```json
+{
+    "evaluation": "Detailed interview evaluation text"
+}
+```
 
-* **Request:**
+#### 4. Get Interview Context
+Retrieve the complete interview conversation.
 
-  `GET /context`
-* **Response:**
+**Endpoint:** `GET /context`
 
+**Response:**
 ```json
 [
-  {
-    "candidate": "Certainly. In one role, our company … 30%."
-  },
-  {
-    "interviewer": "Can you elaborate on it?"
-  },
-  {
-    "candidate": "One of the biggest … over 40%."
-  }
+    {
+        "interviewer": "Question text"
+    },
+    {
+        "candidate": "Answer text"
+    }
 ]
 ```
+
+### Interview States
+The interview progresses through the following states:
+1. Introduction
+2. Resume Overview
+3. Technical Evaluation
+4. Behavioral Assessment
+5. Cultural Fit
+6. Closing
+
+### Difficulty Levels
+- **Easy**: 1 question per state
+- **Medium**: 2 questions per state
+- **Hard**: 3 questions per state
+
+## 🔧 Technical Requirements
+
+- Python 3.12.7
+- OpenAI API Key
+- Required packages (see requirements.txt)
+
+## 📝 Notes
+
+- The API uses GPT-4 for generating questions and evaluating responses
+- Interview progress is tracked using a state machine
+- All conversations are logged to `interview_log.json`
+- Final evaluation is saved to `interview_evaluation.txt`
