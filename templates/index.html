@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interview System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .chat-container {
             height: 400px;
             overflow-y: auto;
             border: 1px solid #ddd;
-            border-radius: 8px;
+            border-radius: 5px;
             padding: 15px;
             margin-bottom: 20px;
         }
         .message {
             margin-bottom: 15px;
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 5px;
         }
         .interviewer {
             background-color: #e3f2fd;
@@ -30,6 +30,27 @@
         .hidden {
             display: none;
         }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-wrapper .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        .badge {
+            margin-right: 5px;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
@@ -40,26 +61,52 @@
         <div id="setupForm" class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Interview Setup</h5>
-                <form id="interviewSetup">
+                <form id="interviewForm">
                     <div class="mb-3">
-                        <label for="jobRole" class="form-label">Job Role</label>
-                        <input type="text" class="form-control" id="jobRole" required>
+                        <label for="companyName" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="companyName" value="AIM Media" required>
                     </div>
                     <div class="mb-3">
-                        <label for="resume" class="form-label">Resume</label>
-                        <textarea class="form-control" id="resume" rows="4" required></textarea>
+                        <label for="jobRole" class="form-label">Job Role</label>
+                        <input type="text" class="form-control" id="jobRole" value="AI ML Engineer" required>
                     </div>
                     <div class="mb-3">
                         <label for="jobDescription" class="form-label">Job Description</label>
-                        <textarea class="form-control" id="jobDescription" rows="4" required></textarea>
+                        <textarea class="form-control" id="jobDescription" rows="6" required>AIM Media is looking for a machine learning engineer to build efficient, data-driven artificial intelligence systems that advance our predictive automation capabilities. The candidate should be highly skilled in statistics and programming, with the ability to confidently assess, analyze, and organize large amounts of data. The candidate should also be able to execute tests and optimize machine learning models and algorithms.
+
+Key Responsibilities:
+- Design and develop machine learning algorithms and deep learning applications
+- Solve complex problems with multilayered data sets
+- Collaborate with data scientists and analysts
+- Identify differences in data distribution that could affect model performance
+- Ensure algorithms generate accurate user recommendations
+- Stay up to date with developments in the machine learning industry
+
+Required Skills:
+- Strong Python programming skills
+- Experience with ML frameworks (TensorFlow, PyTorch)
+- Deep understanding of mathematics and statistics
+- Experience with data structures and algorithms
+- Excellent problem-solving abilities
+- Strong communication skills</textarea>
                     </div>
                     <div class="mb-3">
                         <label for="difficulty" class="form-label">Difficulty Level</label>
                         <select class="form-select" id="difficulty">
                             <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
+                            <option value="medium" selected>Medium</option>
                             <option value="hard">Hard</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Resume (PDF)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" class="form-control" id="resume" accept=".pdf" required>
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('resume').click()">
+                                Choose PDF File
+                            </button>
+                            <span id="fileName">No file chosen</span>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Start Interview</button>
                 </form>
@@ -69,10 +116,11 @@
         <!-- Interview Interface -->
         <div id="interviewInterface" class="hidden">
             <div class="chat-container" id="chatContainer"></div>
-            <div class="input-group">
-                <textarea class="form-control" id="responseInput" rows="3" placeholder="Type your response here..."></textarea>
-                <button class="btn btn-primary" id="sendResponse">Send Response</button>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="userInput" placeholder="Type your response...">
+                <button class="btn btn-primary" id="sendButton">Send</button>
             </div>
+            <button class="btn btn-danger" id="endInterviewButton">End Interview</button>
         </div>
 
         <!-- Evaluation Display -->
@@ -85,100 +133,245 @@
     </div>
 
     <script>
-        let currentState = 'setup';
-        const API_BASE_URL = 'http://localhost:5022';
+        let currentQuestion = '';
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const setupForm = document.getElementById('setupForm');
+        const interviewInterface = document.getElementById('interviewInterface');
+        const fileNameDisplay = document.getElementById('fileName');
+        const endInterviewButton = document.getElementById('endInterviewButton');
 
-        // Setup Form Handler
-        document.getElementById('interviewSetup').addEventListener('submit', async (e) => {
+        // Update file name display when file is selected
+        document.getElementById('resume').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'No file chosen';
+            fileNameDisplay.textContent = fileName;
+        });
+
+        // Handle form submission
+        document.getElementById('interviewForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const setupData = {
+            const formData = new FormData();
+            const resumeFile = document.getElementById('resume').files[0];
+            
+            if (!resumeFile) {
+                alert('Please select a PDF resume file');
+                return;
+            }
+
+            // Validate PDF file
+            if (!resumeFile.type.includes('pdf')) {
+                alert('Please select a valid PDF file');
+                return;
+            }
+
+            // Show loading state
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
+            // Log file details for debugging
+            console.log('File being sent:', resumeFile.name, resumeFile.size, resumeFile.type);
+            
+            // Append the file with the correct field name
+            formData.append('resume', resumeFile);
+            
+            // Create and append JSON data
+            const jsonData = {
+                company_name: document.getElementById('companyName').value,
                 job_role: document.getElementById('jobRole').value,
-                resume: document.getElementById('resume').value,
                 job_description: document.getElementById('jobDescription').value,
                 difficulty: document.getElementById('difficulty').value
             };
+            formData.append('data', JSON.stringify(jsonData));
+
+            // Log FormData contents for debugging
+            for (let pair of formData.entries()) {
+                console.log(pair[0], pair[1]);
+            }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/start`, {
+                const response = await fetch('/start', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(setupData)
+                    body: formData
                 });
 
-                const data = await response.json();
-                if (data.error) {
-                    alert(data.error);
-                    return;
+                // Check if response is ok before trying to parse JSON
+                if (!response.ok) {
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to start interview');
+                    } else {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
                 }
 
-                // Show interview interface
-                document.getElementById('setupForm').classList.add('hidden');
-                document.getElementById('interviewInterface').classList.remove('hidden');
+                // Verify content type is JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server returned non-JSON response");
+                }
+
+                const data = await response.json();
+                console.log('Response from server:', data);  // Debug log
                 
-                // Display first question
+                if (!data || typeof data !== 'object') {
+                    throw new Error("Invalid response format from server");
+                }
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (data.question && (data.question.includes("Error processing") || data.question.includes("Unable to extract"))) {
+                    alert("There was an issue processing your PDF file. Please ensure it contains readable text and try again.");
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                    return;
+                }
+                
+                // Clear previous messages
+                chatContainer.innerHTML = '';
+                
+                // Add company overview
+                addMessage(data.company_overview, 'interviewer');
+                
+                // Add first question
                 addMessage(data.question, 'interviewer');
-                currentState = 'interview';
+                
+                // Update interview state
+                currentQuestion = data.question;
+                
+                // Enable user input
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                
+                // Disable form
+                setupForm.classList.add('hidden');
+                interviewInterface.classList.remove('hidden');
             } catch (error) {
-                console.error('Error starting interview:', error);
-                alert('Failed to start interview. Please try again.');
+                console.error('Error details:', error);  // Debug log
+                alert('Error starting interview: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
             }
         });
 
-        // Response Handler
-        document.getElementById('sendResponse').addEventListener('click', async () => {
-            const response = document.getElementById('responseInput').value.trim();
+        // Handle sending responses
+        sendButton.addEventListener('click', sendResponse);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendResponse();
+            }
+        });
+
+        async function sendResponse() {
+            const response = userInput.value.trim();
             if (!response) return;
 
             addMessage(response, 'candidate');
-            document.getElementById('responseInput').value = '';
+            userInput.value = '';
 
             try {
-                const apiResponse = await fetch(`${API_BASE_URL}/respond`, {
+                const result = await fetch('/respond', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ response })
                 });
 
-                const data = await apiResponse.json();
-                if (data.error) {
-                    alert(data.error);
-                    return;
+                if (!result.ok) {
+                    throw new Error(`HTTP error! status: ${result.status}`);
                 }
 
+                const contentType = result.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Received non-JSON response from server");
+                }
+
+                const data = await result.json();
+                
                 if (data.status === 'completed') {
-                    currentState = 'completed';
-                    document.getElementById('interviewInterface').classList.add('hidden');
-                    document.getElementById('evaluationDisplay').classList.remove('hidden');
-                    document.getElementById('evaluationContent').innerHTML = data.message;
+                    addMessage({ message: data.message, state: 'closing' }, 'interviewer');
+                    // Handle interview completion
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
                 } else {
-                    addMessage(data.message, 'interviewer');
+                    addMessage({ message: data.message, state: data.state }, 'interviewer');
                 }
             } catch (error) {
-                console.error('Error sending response:', error);
-                alert('Failed to send response. Please try again.');
+                console.error('Error details:', error);
+                alert('Error sending response: ' + error.message);
             }
-        });
+        }
 
-        // Helper function to add messages to chat
-        function addMessage(text, sender) {
-            const chatContainer = document.getElementById('chatContainer');
+        function addMessage(message, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
-            messageDiv.textContent = text;
+            
+            // Create state badge if it's from the server response
+            if (typeof message === 'object' && message.state) {
+                const stateBadge = document.createElement('span');
+                stateBadge.className = 'badge bg-secondary mb-2';
+                stateBadge.textContent = message.state.toUpperCase();
+                messageDiv.appendChild(stateBadge);
+                messageDiv.appendChild(document.createElement('br'));
+                messageDiv.appendChild(document.createTextNode(message.message));
+            } else {
+                messageDiv.textContent = message;
+            }
+            
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Handle Enter key in response input
-        document.getElementById('responseInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                document.getElementById('sendResponse').click();
+        // Add end interview functionality
+        endInterviewButton.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to end the interview? This will generate your final evaluation.')) {
+                try {
+                    const result = await fetch('/respond', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            response: "I would like to end the interview now.",
+                            end_interview: true 
+                        })
+                    });
+
+                    if (!result.ok) {
+                        throw new Error(`HTTP error! status: ${result.status}`);
+                    }
+
+                    const contentType = result.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Received non-JSON response from server");
+                    }
+
+                    const data = await result.json();
+                    
+                    addMessage({ message: data.message, state: 'closing' }, 'interviewer');
+                    endInterviewButton.disabled = true;
+                    userInput.disabled = true;
+                    sendButton.disabled = true;
+                    
+                    // Show evaluation after a brief delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } catch (error) {
+                    console.error('Error details:', error);
+                    alert('Error ending interview: ' + error.message);
+                }
             }
         });
     </script>

@@ -1,32 +1,47 @@
 [
     {
-        "interviewer": "Welcome to the interview! To start, could you please share a bit about your experience with developing AI applications using Python? Specifically, I'd love to hear about any projects you've worked on and the types of challenges you encountered."
+        "role": "interviewer",
+        "message": "Hello, \n\nI'm MHire from MachineHack, and I'm here to provide you with an overview of AIM Media, the company you're interviewing for. \n\nAIM Media, also known as Active Interest Media, is a unique enthusiast media company. Their mission is to inspire an ever-growing audience to pursue their hobbies and interests. They are dedicated to providing expert insights and exceptional inspiration across a range of interests, including gardening, woodworking, boating, collecting, restoration, and more. \n\nThe company has a rich history and has grown significantly over the years, owning and operating several daily and weekly newspapers, as well as digital media properties across the United States. They are a leading producer of magazines, digital media, and events that serve four unique specialty markets: home building and restoration, home arts, collectibles, and writing. \n\nIn terms of recent developments, AIM Media has been driving technology value in the publishing industry. They have launched many brands, products, and magazines over the years and are continually expanding their digital, IT, and customer acquisition efforts.\n\nThe work environment at AIM Media is one that aligns with your interests. There are many opportunities to work across one of their iconic brands, allowing you to fuel your own passion and find a career that aligns with your interests. \n\nI hope this gives you a good understanding of AIM Media. If you have any questions, feel free to ask.",
+        "state": "company_overview"
     },
     {
-        "candidate": "Built AI apps with TensorFlow/PyTorch, including an NLP chatbot. Optimized performance and reduced latency via fine-tuning and quantization."
+        "role": "interviewer",
+        "message": "Thank you for joining us today, Aditya. To start off, could you share a bit about your educational background and how it has shaped your journey toward becoming an AI/ML Engineer? Additionally, I\u2019d love to hear about any specific experiences or achievements during your studies that you feel prepared you for this role at AIM Media.",
+        "state": "introduction"
     },
     {
-        "interviewer": "Thank you for sharing your experience with TensorFlow and PyTorch. To get a better sense of your expertise, could you tell me more about the NLP chatbot project you mentioned? Specifically, what was the primary goal of the chatbot, and what role did you play in its development?"
+        "role": "candidate",
+        "message": "OK",
+        "state": "introduction"
     },
     {
-        "candidate": "The goal was automated customer support. I trained the NLP model, fine-tuned transformers, and optimized performance."
+        "role": "interviewer",
+        "message": "Could you describe your professional journey so far and highlight any projects or experiences that you believe have significantly contributed to your growth as a machine learning engineer? Additionally, what aspects of your journey have motivated you to apply for this position at AIM Media?",
+        "state": "introduction"
     },
     {
-        "interviewer": "Based on your experience with training NLP models and optimizing performance, could you explain how you approach debugging issues in your AI applications? Are there specific tools or techniques you find particularly helpful?"
+        "role": "candidate",
+        "message": "OK",
+        "state": "introduction"
     },
     {
-        "candidate": "I use logging, model checkpoints, and visualization tools like TensorBoard. For debugging, I analyze loss curves, check data preprocessing, and run ablation tests."
+        "role": "interviewer",
+        "message": "In your role at Blitzentech Solution, you contributed to projects involving synthetic dataset generation and content recommendation systems. Could you share more details about your work on these projects? Specifically, what methodologies or algorithms did you employ, and how did they enhance the outcomes of those projects?",
+        "state": "resume_overview"
     },
     {
-        "interviewer": "In your previous projects, how have you collaborated with team members to achieve project goals, particularly when working on AI applications? Could you share an example of a successful team effort and your contribution to it?"
+        "role": "candidate",
+        "message": "OK",
+        "state": "resume_overview"
     },
     {
-        "candidate": "I collaborated via Agile, using Git for version control and Slack for communication. In one project, I optimized an AI model while teammates handled data and deployment."
+        "role": "interviewer",
+        "message": "Your experience includes working with advanced retrieval-augmented generation (RAG) solutions. Could you explain how you've applied these solutions in your projects and the impact they've had on improving data accessibility and streamlining user experiences? Additionally, what challenges did you face during implementation, and how did you overcome them?",
+        "state": "resume_overview"
     },
     {
-        "interviewer": "As part of understanding how you'd fit into our company culture, could you describe what you value most in a workplace environment and how you contribute to creating a positive and productive atmosphere?"
-    },
-    {
-        "candidate": "I value teamwork, clear communication, and continuous learning. I contribute by sharing knowledge, mentoring, and maintaining a collaborative mindset."
+        "role": "candidate",
+        "message": "I would like to end the interview now.",
+        "state": "closing"
     }
 ]
