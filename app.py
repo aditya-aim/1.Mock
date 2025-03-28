@@ -571,7 +571,19 @@ def get_evaluation():
 if __name__ == '__main__':
     import hypercorn.asyncio
     import hypercorn.config
+    import socket
+    
+    # Get local IP address
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
     
     config = hypercorn.config.Config()
     config.bind = ["0.0.0.0:5022"]
+    
+    print("\n🚀 Server is running!")
+    print(f"📱 Access the application via:")
+    print(f"   Local: http://localhost:5022")
+    print(f"   IP:    http://{local_ip}:5022")
+    print("\nPress CTRL + C to quit\n")
+    
     asyncio.run(hypercorn.asyncio.serve(app, config))
