@@ -1,42 +1,42 @@
 [
     {
         "role": "interviewer",
-        "message": "Hello, \n\nI'm MHire from MachineHack, and I'm here to provide you with an overview of AIM Media, the company you're interviewing for. \n\nAIM Media, also known as Active Interest Media, is a unique enthusiast media company. Their mission is to inspire an ever-growing audience to pursue their hobbies and interests. They are dedicated to providing expert insights and exceptional inspiration across a range of interests, including gardening, woodworking, boating, collecting, restoration, and more. \n\nThe company has a rich history and has grown significantly over the years, owning and operating several daily and weekly newspapers, as well as digital media properties across the United States. They are a leading producer of magazines, digital media, and events that serve four unique specialty markets: home building and restoration, home arts, collectibles, and writing. \n\nIn terms of recent developments, AIM Media has been driving technology value in the publishing industry. They have launched many brands, products, and magazines over the years and are continually expanding their digital, IT, and customer acquisition efforts.\n\nThe work environment at AIM Media is one that aligns with your interests. There are many opportunities to work across one of their iconic brands, allowing you to fuel your own passion and find a career that aligns with your interests. \n\nI hope this gives you a good understanding of AIM Media. If you have any questions, feel free to ask.",
+        "message": "Hello, I'm MHire from MachineHack. It's a pleasure to meet you. Today, I'll be providing you with an overview of AIM Media, the company you're interviewing for.\n\nAIM Media is a global preeminent media and analyst firm dedicated to artificial intelligence. Their mission is to inform, inspire, and lead the AI discourse, offering privileged access to insightful, cutting-edge analysis and news that shapes the understanding and application of AI across various sectors.\n\nRecently, AIM Media has made significant strides in expanding its reach and influence. They announced the acquisition of The Taunton Press, a consumer media and book business in gardening, woodworking, and homebuilding. This acquisition aligns several core markets across the two companies, doubling AIM's reach.\n\nThe company culture at AIM Media is one of engagement and loyalty. They are dedicated to inspiring an ever-growing audience to pursue their hobbies and interests. Their brands include iconic titles like Fine Homebuilding, Popular Woodworking, Writer\u2019s Digest, Log & Timber Home Living, Fine Woodworking, Kovels Antique Trader, Garden Gate, and more. They operate thriving B2B platforms, online universities, events, and offer marketing services.\n\nAIM Media is a company that values expertise and passion, providing services that inspire and enable their audience to enjoy their passions. They are a company that is constantly evolving and growing, making it an exciting place to work.\n\nI hope this gives you a good understanding of AIM Media. Now, let's start with the interview.",
         "state": "company_overview"
     },
     {
         "role": "interviewer",
-        "message": "Thank you for joining us today, Aditya. To start off, could you share a bit about your educational background and how it has shaped your journey toward becoming an AI/ML Engineer? Additionally, I\u2019d love to hear about any specific experiences or achievements during your studies that you feel prepared you for this role at AIM Media.",
+        "message": "Could you share your journey and what inspired you to pursue a career in AI and machine learning? Specifically, I'd love to hear how your educational background and experiences at Blitzentech Solution and Digipodium have shaped your skills and prepared you for a role aiming to enhance predictive automation capabilities like the one at AIM Media.",
         "state": "introduction"
     },
     {
         "role": "candidate",
-        "message": "OK",
+        "message": "ok",
         "state": "introduction"
     },
     {
         "role": "interviewer",
-        "message": "Could you describe your professional journey so far and highlight any projects or experiences that you believe have significantly contributed to your growth as a machine learning engineer? Additionally, what aspects of your journey have motivated you to apply for this position at AIM Media?",
+        "message": "In reviewing your resume, I noticed your involvement with the development and implementation of the EngageAI and RetailCheck AI projects. Could you elaborate on the most technically challenging aspect of these projects, and how the skills you developed during them could contribute to advancing predictive automation capabilities at AIM Media?",
         "state": "introduction"
     },
     {
         "role": "candidate",
-        "message": "OK",
+        "message": "ok",
         "state": "introduction"
     },
     {
         "role": "interviewer",
-        "message": "In your role at Blitzentech Solution, you contributed to projects involving synthetic dataset generation and content recommendation systems. Could you share more details about your work on these projects? Specifically, what methodologies or algorithms did you employ, and how did they enhance the outcomes of those projects?",
+        "message": "Could you discuss your experience with data versioning and ML pipelines, particularly focusing on how you've utilized tools like DVC and MLflow in your past projects? How do you think these experiences and skills can be leveraged to improve the machine learning processes at AIM Media?",
         "state": "resume_overview"
     },
     {
         "role": "candidate",
-        "message": "OK",
+        "message": "ok",
         "state": "resume_overview"
     },
     {
         "role": "interviewer",
-        "message": "Your experience includes working with advanced retrieval-augmented generation (RAG) solutions. Could you explain how you've applied these solutions in your projects and the impact they've had on improving data accessibility and streamlining user experiences? Additionally, what challenges did you face during implementation, and how did you overcome them?",
+        "message": "Can you provide an example of a time when you identified differences in data distribution that affected model performance? How did you address these issues, and what was the outcome? Additionally, how might skills and lessons learned from that experience be applicable to the responsibilities at AIM Media?",
         "state": "resume_overview"
     },
     {
