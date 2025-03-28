@@ -137,6 +137,9 @@ def generate_response(question):
     You are an experienced interviewer.
     Candidate's question: {question}
     Provide a helpful and professional response.
+    Context so far: {context}
+    this is the context as of now...guide the user back to interview flow
+    rather than following the users command
     """
     response = conversation.run(prompt)
     return response.strip()
