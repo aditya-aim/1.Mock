@@ -2,18 +2,20 @@ import os
 import json
 from flask import Flask, request, jsonify, render_template
 from transitions import Machine
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
+from langchain_groq import ChatGroq
+from langchain_community.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 import io
 from langchain_tavily import TavilySearch
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import Tool, AgentExecutor, create_openai_functions_agent
 import asyncio
 import concurrent.futures
+import datetime
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -28,14 +30,56 @@ CORS(app, resources={r"/*": {"origins": "*"}},
 
 load_dotenv()
 
+# API Keys
 api_key = os.getenv("OPENAI_API_KEY")
 tavily_key = os.getenv("TAVILY_API_KEY")
+groq_key = os.getenv("GROQ_API_KEY")
+nebius_key = os.getenv("NEBIUS_API_KEY")
+
+# LLM Configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()  # groq, nebius, openai   (default: groq) 
+LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")  # groq: llama-3.3-70b-versatile, openai: gpt-4, nebius: meta-llama/Meta-Llama-3.1-70B-Instruct-fast
+
+def get_llm():
+    """Get the configured LLM based on environment settings"""
+    if LLM_PROVIDER == "groq":
+        if not groq_key:
+            raise ValueError("GROQ_API_KEY is required when using Groq as LLM provider")
+        return ChatGroq(
+            groq_api_key=groq_key,
+            model_name=LLM_MODEL,
+            temperature=0,
+            max_tokens=4096
+        )
+    elif LLM_PROVIDER == "nebius":
+        if not nebius_key:
+            raise ValueError("NEBIUS_API_KEY is required when using Nebius as LLM provider")
+        return ChatOpenAI(
+            openai_api_key=nebius_key,
+            model_name=LLM_MODEL,
+            temperature=0,
+            max_tokens=4096,
+            base_url="https://api.studio.nebius.com/v1/",
+            extra_body={
+                "top_k": 50,
+                "top_p": 0.9
+            }
+        )
+    else:  # Default to OpenAI
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is required when using OpenAI as LLM provider")
+        return ChatOpenAI(
+            openai_api_key=api_key,
+            model_name=LLM_MODEL,
+            temperature=0,
+            stream_options={"include_usage": True}
+        )
 
 # Initialize Tavily Search tool
 tavily_search = TavilySearch(max_results=5)
 
-# Configure GPT-4 model for company research
-company_llm = ChatOpenAI(model="gpt-4", temperature=0, stream_options={"include_usage": True})
+# Configure LLM for company research
+company_llm = get_llm()
 
 # Define prompt template for company research
 company_prompt = ChatPromptTemplate.from_messages([
@@ -57,58 +101,9 @@ company_tools = [
 company_agent = create_openai_functions_agent(company_llm, company_tools, company_prompt)
 company_agent_executor = AgentExecutor(agent=company_agent, tools=company_tools, verbose=True)
 
-async def fetch_and_generate_company_overview(company_name):
-    """Fetch company information and generate overview in a single async call"""
-    try:
-        # Verify API keys are present
-        if not api_key:
-            print("Error: OPENAI_API_KEY is not set")
-            return f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
-            
-        if not tavily_key:
-            print("Error: TAVILY_API_KEY is not set")
-            return f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
+# Initialize main LLM for interview
+llm = get_llm()
 
-        # Get the company overview guidelines from the state machine
-        overview_guidelines = interview.state_guidelines['company_overview']
-        
-        # Single query to get company info in interview format
-        query = f"""
-        You are an experienced interviewer providing a company overview.
-        Follow these guidelines exactly:
-        {overview_guidelines}
-        
-        Research and create a professional overview of {company_name} that includes:
-        1. Company mission and values
-        2. Recent developments and achievements
-        3. Company culture and work environment
-        
-        Keep the overview concise but informative, focusing on aspects that would be relevant to a candidate.
-        Format the response as if you are speaking directly to the candidate in an interview setting.
-        IN THE END YOU WILL SAY LETS START WITH THE INTERVIEW NOW
-        """
-        
-        try:
-            response = await asyncio.get_event_loop().run_in_executor(
-                None, 
-                lambda: company_agent_executor.invoke({"input": query})
-            )
-            if not response or 'output' not in response:
-                print("Error: Invalid response from company agent")
-                return f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
-            return response.get('output', '').strip()
-        except Exception as e:
-            print(f"Error in company agent execution: {str(e)}")
-            return f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
-            
-    except Exception as e:
-        print(f"Error in company overview generation: {str(e)}")
-        return f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
-
-llm = ChatOpenAI(
-    openai_api_key=api_key,
-    model_name="gpt-4o"
-)
 # Initialize Conversation Memory
 memory = ConversationBufferMemory()
 conversation = ConversationChain(llm=llm, memory=memory, verbose=True)
@@ -298,63 +293,67 @@ def evaluate_conversation():
     
     prompt = f"""
     You are an experienced interviewer evaluating a candidate's performance for the position of {interview.job_role}.
-    Provide clear, constructive feedback that helps the candidate understand their performance and how to improve.
-    
+    Provide a structured, insightful, and actionable evaluation following the format below.
+
     Job Description:
     {interview.job_description}
-    
+
     Interview Difficulty Level: {interview.difficulty}
-    
+
     {state_status}
-    
+
     Below is the conversation between the interviewer and candidate:
-    
+
     {conversation_text}
-    
-    Provide a concise evaluation of the completed stages.
-    
-    ### **Stage-wise Performance:**
-    
+
+    ### **Candidate Summary**
+    - **Job Role:** {interview.job_role}
+    - **Total Score:** (Average of completed stages)
+    - **Interview Status:** (Ready / Needs Improvement / Not Ready)
+
+    ### **Stage-wise Performance**
+    Provide a brief yet insightful evaluation for each completed stage:
     """
-    
-    # Add evaluation criteria only for completed states (excluding company_overview)
     if 'introduction' in completed_states:
-        prompt += f"- **Introduction:** Brief evaluation and score (out of 10)\n"
-    
+        prompt += "- **Introduction:** Summary of performance, key impressions, score (out of 10)\n"
     if 'resume_overview' in completed_states:
-        prompt += f"- **Resume Overview:** Brief evaluation and score (out of 10)\n"
-    
+        prompt += "- **Resume Overview:** Depth of experience, clarity of responses, score (out of 10)\n"
     if 'technical_evaluation' in completed_states:
-        prompt += f"- **Technical Evaluation:** Brief evaluation and score (out of 10)\n"
-    
+        prompt += "- **Technical Evaluation:** Problem-solving skills, technical knowledge, score (out of 10)\n"
     if 'behavioral_assessment' in completed_states:
-        prompt += f"- **Behavioral Assessment:** Brief evaluation and score (out of 10)\n"
-    
+        prompt += "- **Behavioral Assessment:** Communication, adaptability, score (out of 10)\n"
     if 'cultural_fit' in completed_states:
-        prompt += f"- **Cultural Fit:** Brief evaluation and score (out of 10)\n"
-    
+        prompt += "- **Cultural Fit:** Alignment with company values, attitude, score (out of 10)\n"
+
     prompt += """
-    For each completed stage, provide only:
-    - One-line summary of performance
-    - Score out of 10
-    
-    For incomplete stages, just note: "Not evaluated"
-    
-    ### **Overall Feedback:**
-    1. Top 3 strengths across all stages
-    2. Top 3 areas for improvement
-    3. Overall score (average of completed stages)
-    4. One key recommendation for future interviews
+    For incomplete stages, note: "Not evaluated"
+
+    ### **Overall Evaluation**
+    1. **Top 3 Strengths:** Based on completed stages
+    2. **Top 3 Areas for Improvement:** With context and suggestions
+    3. **Readiness Flag:** (Strong / Moderate / Weak)
+    4. **Overall Score:** (Average of completed stage scores)
+
+    ### **Feedback & Resources**
+    - Actionable improvement tips tailored to the candidate
+    - Relevant learning resources or study materials
+
+    ### **Final Comments**
+    Provide an encouraging conclusion with a motivational note for the candidate.
+
+    ---
+    Ensure that your feedback is constructive, balanced, and supportive, helping the candidate grow and refine their skills.
     """
-    
+
     response = conversation.run(prompt).strip()
     print(f"Evaluation: {response}")
-    
+
     # Save the evaluation to a file
     with open('interview_evaluation.txt', 'w') as f:
         f.write(response)
-    
+
     return response
+
 
 def extract_text_from_pdf(pdf_file):
     """
@@ -406,6 +405,98 @@ def extract_text_from_pdf(pdf_file):
 def index():
     return render_template('index.html')
 
+async def check_llm_availability():
+    """Check availability of all configured LLM providers"""
+    llm_status = {}
+    
+    # Check OpenAI
+    if api_key:
+        try:
+            test_llm = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name="gpt-3.5-turbo",
+                temperature=0,
+                max_tokens=10
+            )
+            test_llm.invoke("test")
+            llm_status["openai"] = {"status": "up", "model": "gpt-3.5-turbo"}
+        except Exception as e:
+            llm_status["openai"] = {"status": "down", "error": str(e)}
+    
+    # Check Groq
+    if groq_key:
+        try:
+            test_llm = ChatGroq(
+                groq_api_key=groq_key,
+                model_name=LLM_MODEL,
+                temperature=0,
+                max_tokens=10
+            )
+            test_llm.invoke("test")
+            llm_status["groq"] = {
+                "status": "up",
+                "model": LLM_MODEL,
+                "configured_model": LLM_MODEL if LLM_PROVIDER == "groq" else None
+            }
+        except Exception as e:
+            llm_status["groq"] = {"status": "down", "error": str(e)}
+    
+    # Check Nebius
+    if nebius_key:
+        try:
+            test_llm = ChatOpenAI(
+                openai_api_key=nebius_key,
+                model_name="meta-llama/Meta-Llama-3.1-70B-Instruct-fast",
+                temperature=0,
+                max_tokens=10,
+                base_url="https://api.studio.nebius.com/v1/"
+            )
+            test_llm.invoke("test")
+            llm_status["nebius"] = {"status": "up", "model": "meta-llama/Meta-Llama-3.1-70B-Instruct-fast"}
+        except Exception as e:
+            llm_status["nebius"] = {"status": "down", "error": str(e)}
+    
+    return llm_status
+
+@app.route('/ping', methods=['GET'])
+async def ping():
+    """Health check endpoint that verifies server status and LLM configuration"""
+    try:
+        # Check if LLM provider is configured
+        provider_status = {
+            "provider": LLM_PROVIDER,
+            "model": LLM_MODEL,
+            "status": "configured"
+        }
+        
+        # Check API keys based on provider
+        if LLM_PROVIDER == "groq" and not groq_key:
+            provider_status["status"] = "error"
+            provider_status["message"] = "GROQ_API_KEY is missing"
+        elif LLM_PROVIDER == "nebius" and not nebius_key:
+            provider_status["status"] = "error"
+            provider_status["message"] = "NEBIUS_API_KEY is missing"
+        elif LLM_PROVIDER == "openai" and not api_key:
+            provider_status["status"] = "error"
+            provider_status["message"] = "OPENAI_API_KEY is missing"
+        
+        # Check availability of all LLMs
+        llm_status = await check_llm_availability()
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "llm": provider_status,
+            "tavily": "configured" if tavily_key else "missing",
+            "llm_providers": llm_status
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.datetime.now().isoformat()
+        }), 500
+
 @app.route('/start', methods=['POST'])
 async def start_interview():
     try:
@@ -426,79 +517,66 @@ async def start_interview():
         if not resume_file.filename.endswith('.pdf'):
             print("Invalid file type received")  # Debug log
             return jsonify({'error': 'File must be a PDF'}), 400
-            
-        # Extract text from PDF
-        resume_text = extract_text_from_pdf(resume_file)
-        print(f"Extracted resume text length: {len(resume_text)}")  # Debug log
 
-        # Get JSON data from request
+        # Get form data
+        company_name = request.form.get('company_name')
+        job_role = request.form.get('job_role')
+        job_description = request.form.get('job_description')
+        difficulty = request.form.get('difficulty', 'easy').lower()
+
+        if not all([company_name, job_role, job_description]):
+            print("Missing required parameters")  # Debug log
+            return jsonify({'error': 'Missing required parameters'}), 400
+
         try:
-            json_data = request.form.get('data')
-            if not json_data:
-                print("No JSON data received")  # Debug log
-                return jsonify({'error': 'JSON data is required'}), 400
-                
-            data = json.loads(json_data)
-            print(f"Received job role: {data.get('job_role')}")  # Debug log
-            
-            job_role = data.get("job_role")
-            job_description = data.get("job_description")
-            difficulty = data.get("difficulty", "easy").lower()  # Default to easy
-            company_name = data.get("company_name")
+            # Extract text from PDF
+            resume_text = extract_text_from_pdf(resume_file)
+            print(f"Extracted resume text length: {len(resume_text)}")  # Debug log
 
-            if not all([job_role, job_description, company_name]):
-                print("Missing required parameters")  # Debug log
-                return jsonify({'error': 'Missing required parameters in JSON data'}), 400
+            # Set interview details
+            interview.state = 'company_overview'
+            interview.step_count = 0
+            interview.set_interview_details(job_role, resume_text, job_description, difficulty, company_name)
+            context.clear()
+            memory.clear()
 
+            # Generate company overview
             try:
-                # Set interview details
-                interview.state = 'company_overview'
-                interview.step_count = 0
-                interview.set_interview_details(job_role, resume_text, job_description, difficulty, company_name)
-                context.clear()
-                memory.clear()
-
-                # Generate company overview
-                try:
-                    company_overview = await fetch_and_generate_company_overview(company_name)
-                except Exception as e:
-                    print(f"Error generating company overview: {str(e)}")
-                    company_overview = f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
-                
-                # Add company overview to context
-                context.append({
-                    "role": "interviewer",
-                    "message": company_overview,
-                    "state": "company_overview"
-                })
-
-                # Generate first question for introduction state
-                interview.next_state()  # Move to introduction state
-                question = generate_question(interview.state)
-                
-                # Add the first question to context BEFORE returning
-                context.append({
-                    "role": "interviewer",
-                    "message": question,
-                    "state": interview.state
-                })
-                
-                # Return both messages to the frontend
-                return jsonify({
-                    'company_overview': company_overview,
-                    'question': question,
-                    'state': interview.state,
-                    'context': context  # Include the full context
-                })
-                
+                company_overview = await fetch_and_generate_company_overview(company_name)
             except Exception as e:
-                print(f"Error during interview setup: {str(e)}")  # Debug log
-                return jsonify({'error': f'Failed to setup interview: {str(e)}'}), 500
+                print(f"Error generating company overview: {str(e)}")
+                company_overview = f"Hello, I'm MHire from MachineHack. I'll be conducting your interview for {company_name}. Let's begin with a brief overview of the company."
             
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {str(e)}")  # Debug log
-            return jsonify({'error': 'Invalid JSON data format'}), 400
-        
+            # Add company overview to context
+            context.append({
+                "role": "interviewer",
+                "message": company_overview,
+                "state": "company_overview"
+            })
+
+            # Generate first question for introduction state
+            interview.next_state()  # Move to introduction state
+            question = generate_question(interview.state)
+            
+            # Add the first question to context BEFORE returning
+            context.append({
+                "role": "interviewer",
+                "message": question,
+                "state": interview.state
+            })
+            
+            # Return both messages to the frontend
+            return jsonify({
+                'company_overview': company_overview,
+                'question': question,
+                'state': interview.state,
+                'context': context  # Include the full context
+            })
+            
+        except Exception as e:
+            print(f"Error during interview setup: {str(e)}")  # Debug log
+            return jsonify({'error': f'Failed to setup interview: {str(e)}'}), 500
+            
     except Exception as e:
         print(f"Unexpected error: {str(e)}")  # Debug log
         return jsonify({'error': str(e)}), 500

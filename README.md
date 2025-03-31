@@ -35,9 +35,23 @@ pip install -r requirements.txt
    Create `.env` file in the root directory:
 
 ```plaintext
+# Required API Keys
 OPENAI_API_KEY=your-openai-api-key-here
 TAVILY_API_KEY=your-tavily-api-key-here
+GROQ_API_KEY=your-groq-api-key-here  # Required only if using Groq
+NEBIUS_API_KEY=your-nebius-api-key-here  # Required only if using Nebius
+
+# LLM Configuration
+LLM_PROVIDER=openai  # Options: "openai", "groq", or "nebius"
+LLM_MODEL=gpt-4     # Model name (e.g., "gpt-4" for OpenAI, "mixtral-8x7b-32768" for Groq, "meta-llama/Meta-Llama-3.1-70B-Instruct-fast" for Nebius)
 ```
+
+**Note:** 
+- For OpenAI, use models like "gpt-4", "gpt-3.5-turbo"
+- For Groq, use models like "mixtral-8x7b-32768", "llama2-70b-4096"
+- For Nebius, use models like "meta-llama/Meta-Llama-3.1-70B-Instruct-fast"
+- You only need to set the API key for the provider you're using
+- Default provider is OpenAI if not specified
 
 4. **Run the Server**
 
@@ -95,19 +109,41 @@ Initiates a new interview session with company overview and initial question.
 
 **Request Parameters:**
 
-- `resume`: PDF file containing candidate's resume
-- `data`: JSON string containing interview details
+- `resume`: PDF file containing candidate's resume (required)
+- `company_name`: Name of the company (required)
+- `job_role`: Position being interviewed for (required)
+- `job_description`: Detailed job description (required)
+- `difficulty`: Interview difficulty level (optional, defaults to "easy")
 
-**Request Body Example:**
-
-```json
-{
-    "company_name": "AIM Media",
-    "job_role": "AI ML Engineer",
-    "job_description": "Detailed job description...",
-    "difficulty": "medium"  // optional, defaults to "easy"
-}
+**Form Data Example:**
 ```
+resume: [PDF file]
+company_name: AIM Media
+job_role: AI ML Engineer
+job_description: Detailed job description...
+difficulty: medium
+```
+
+**Using curl:**
+```bash
+curl -X POST http://localhost:5022/start \
+  -F "resume=@/path/to/your/resume.pdf" \
+  -F "company_name=AIM Media" \
+  -F "job_role=AI ML Engineer" \
+  -F "job_description=Detailed job description..." \
+  -F "difficulty=medium"
+```
+
+**Using Postman:**
+1. Select POST method
+2. Enter URL: `http://localhost:5022/start`
+3. Select "form-data" in the Body tab
+4. Add the following key-value pairs:
+   - Key: `resume` (Type: File) - Select your PDF file
+   - Key: `company_name` (Type: Text) - Enter company name
+   - Key: `job_role` (Type: Text) - Enter job role
+   - Key: `job_description` (Type: Text) - Enter job description
+   - Key: `difficulty` (Type: Text) - Enter difficulty level (optional)
 
 **Success Response (200 OK):**
 
@@ -227,31 +263,24 @@ Retrieve the interview evaluation after completion.
 The interview progresses through the following states:
 
 1. **Company Overview**
-
    - Introduction and company information
    - Not included in final evaluation
 2. **Introduction**
-
    - Candidate background and experience
    - Focus on professional journey and motivation
 3. **Resume Overview**
-
    - Detailed discussion of qualifications
    - Experience and achievements
 4. **Technical Evaluation**
-
    - Technical skills assessment
    - Problem-solving abilities
 5. **Behavioral Assessment**
-
    - Soft skills evaluation
    - Past behavior analysis
 6. **Cultural Fit**
-
    - Values alignment
    - Work style compatibility
 7. **Closing**
-
    - Final questions
    - Interview wrap-up
 
