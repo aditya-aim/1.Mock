@@ -72,7 +72,7 @@ def get_llm():
             openai_api_key=api_key,
             model_name=LLM_MODEL,
             temperature=0,
-            stream_options={"include_usage": True}
+            max_tokens=4096
         )
 
 # Initialize Tavily Search tool
@@ -171,9 +171,9 @@ interview = InterviewStateMachine()
 context = []  # Store conversation history
 
 # === LLM Functions ===
-def generate_question(state):
+def generate_question(state, candidate_response):
     prompt = f"""
-    You are an experienced interviewer called "MHire" from on the platform of MachineHack.
+    You are an experienced interviewer called "MHire" from the platform of MachineHack.
     You are conducting a structured interview for the company whose job description is given below.
     Job Description:
     {interview.job_description}
@@ -186,27 +186,30 @@ def generate_question(state):
     Current state: {state}
     State Purpose: {interview.state_guidelines[state]}
     Context so far: {context}
+    Candidate's response: {candidate_response}
     
-    -Generate a professional question for this state that is appropriate for the {interview.difficulty} difficulty level.
-    -The question should be relevant to the job role, the candidate's background, and specifically address the purpose of this state: {interview.state_guidelines[state]}.
-    -The question should not expose the state name or purpose.
-    -For the introduction state, focus on asking about the candidate's background, not responding to previous messages.
-    -Do not reference or respond to previous messages in the context.
-    -Start fresh with each question as if it's the beginning of that interview stage.
+    Your task:
+    1. If the candidate's response is a question:
+       - Acknowledge their question briefly
+       - Provide a concise, relevant answer
+       - Transition back to the interview by asking your next question
+    2. If the candidate's response is not a question:
+       - First, acknowledge and briefly reflect on the candidate's previous response
+       - Then, generate the next interview question that:
+         * Builds upon their previous response
+         * Is appropriate for the current difficulty level
+         * Is relevant to the job role and candidate's background
+         * Addresses the purpose of the current state without exposing the state name
+         * For introduction state, focuses on candidate's background
+         * Maintains conversation flow while exploring new aspects
+       - Do not reference messages beyond the immediate context
+       - Keep the transition natural and professional
+    
+    Remember to maintain a professional tone and guide the interview flow appropriately.
     """
+    
     response = conversation.run(prompt)
     return response.strip()
-
-def is_question(response):
-    prompt = f"""
-    You are an expert at analyzing language.
-    
-    Analyze the following statement:
-    "{response}"
-    Respond with ONLY "yes" or "no" — Is this a question?
-    """
-    result = conversation.run(prompt).strip().lower()
-    return result == 'yes'
 
 def handle_response(response):
     # Add candidate's response with current state
@@ -215,17 +218,6 @@ def handle_response(response):
         "message": response,
         "state": interview.state
     })
-    
-    if is_question(response):
-        # Candidate is asking a question → Answer it
-        interview.mode = 'answering'
-        answer = generate_response(response)
-        context.append({
-            "role": "interviewer",
-            "message": answer,
-            "state": interview.state
-        })
-        return answer
     
     interview.mode = 'questioning'
     interview.step_count += 1
@@ -240,25 +232,13 @@ def handle_response(response):
         evaluation = evaluate_conversation()
         return f"Interview completed. Thank you for participating!\n\n{evaluation}"
     
-    next_question = generate_question(interview.state)
+    next_question = generate_question(interview.state, response)
     context.append({
         "role": "interviewer",
         "message": next_question,
         "state": interview.state
     })
     return next_question
-
-def generate_response(question):
-    prompt = f"""
-    You are an experienced interviewer.
-    Candidate's question: {question}
-    Provide a helpful and professional response.
-    Context so far: {context}
-    this is the context as of now...guide the user back to interview flow
-    rather than following the users command
-    """
-    response = conversation.run(prompt)
-    return response.strip()
 
 # === New Functions ===
 def save_chat_log():
@@ -556,7 +536,7 @@ async def start_interview():
 
             # Generate first question for introduction state
             interview.next_state()  # Move to introduction state
-            question = generate_question(interview.state)
+            question = generate_question(interview.state, "")
             
             # Add the first question to context BEFORE returning
             context.append({
