@@ -1,13 +1,13 @@
 # AI Interview Agent - Mock Interview API
 
-A Flask-based API that simulates an AI-powered interview process using GPT-4. The API generates professional interview questions, handles candidate responses, and provides detailed evaluations.
+A Flask-based API that simulates an AI-powered interview process using various LLM providers (OpenAI, Groq, Nebius). The API generates professional interview questions, handles candidate responses, and provides detailed evaluations.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.12.7
-- OpenAI API Key
+- API Keys for LLM providers (OpenAI, Groq, Nebius)
 - Tavily API Key
 - Git (optional)
 
@@ -88,6 +88,8 @@ This is the easiest way to test the API's functionality without writing any code
 ### Using API Clients
 
 Alternatively, you can test the API using tools like Postman, curl, or any HTTP client. See the API Documentation section below for detailed endpoint information.
+
+A Postman collection (`mock-route-test.json`) is available for easy testing of all endpoints.
 
 ## 📚 API Documentation
 
@@ -368,6 +370,7 @@ Common error scenarios:
 ├── requirements.txt       # Python dependencies
 ├── .env                  # Environment variables (API keys)
 ├── .gitignore           # Git ignore rules
+├── mock-route-test.json  # Postman collection for testing
 ├── interview_log.json    # Interview conversation logs
 ├── interview_evaluation.txt  # Final interview evaluation
 └── templates/           # Frontend templates
@@ -477,3 +480,19 @@ LLM_MODEL=llama-3.3-70b-versatile  # Model name based on provider
    - Restart the server after modifying the `.env` file
    - Use the `/ping` endpoint to verify configuration
    - Monitor provider status in the logs
+
+## 🧪 Testing with Postman
+
+A Postman collection (`mock-route-test.json`) is included in the project for easy testing of all API endpoints. To use it:
+
+1. Open Postman
+2. Click "Import" button
+3. Select the `mock-route-test.json` file
+4. The collection will be imported with all endpoints ready to test
+
+The collection includes:
+- Detailed descriptions for each endpoint
+- Example request bodies and headers
+- Sample responses for different scenarios
+- Environment variable for base URL
+- Proper content types and HTTP methods

@@ -1,0 +1,391 @@
+{
+	"info": {
+		"_postman_id": "mock-interview-api",
+		"name": "Mock Interview API",
+		"description": "Collection for testing the Mock Interview API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5022/ping",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "5022",
+					"path": ["ping"]
+				},
+				"description": "Check the health status of the server and LLM providers"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5022/ping",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["ping"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"status\": \"healthy\",\n    \"timestamp\": \"2024-03-21T10:30:00.000Z\",\n    \"llm\": {\n        \"provider\": \"groq\",\n        \"model\": \"llama-3.3-70b-versatile\",\n        \"status\": \"configured\"\n    },\n    \"tavily\": \"configured\",\n    \"llm_providers\": {\n        \"openai\": {\n            \"status\": \"up\",\n            \"model\": \"gpt-3.5-turbo\"\n        },\n        \"groq\": {\n            \"status\": \"up\",\n            \"model\": \"llama-3.3-70b-versatile\",\n            \"configured_model\": \"llama-3.3-70b-versatile\"\n        },\n        \"nebius\": {\n            \"status\": \"up\",\n            \"model\": \"meta-llama/Meta-Llama-3.1-70B-Instruct-fast\"\n        }\n    }\n}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Start Interview",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "resume",
+							"type": "file",
+							"src": "/path/to/your/resume.pdf"
+						},
+						{
+							"key": "company_name",
+							"value": "AIM Media",
+							"type": "text"
+						},
+						{
+							"key": "job_role",
+							"value": "AI ML Engineer",
+							"type": "text"
+						},
+						{
+							"key": "job_description",
+							"value": "We are looking for an experienced AI ML Engineer to join our team. The ideal candidate should have strong experience in machine learning, deep learning, and NLP. Responsibilities include developing and deploying ML models, working with large datasets, and collaborating with cross-functional teams.",
+							"type": "text"
+						},
+						{
+							"key": "difficulty",
+							"value": "medium",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:5022/start",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "5022",
+					"path": ["start"]
+				},
+				"description": "Start a new interview session with company overview and initial question"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "resume",
+									"type": "file",
+									"src": "/path/to/your/resume.pdf"
+								},
+								{
+									"key": "company_name",
+									"value": "AIM Media",
+									"type": "text"
+								},
+								{
+									"key": "job_role",
+									"value": "AI ML Engineer",
+									"type": "text"
+								},
+								{
+									"key": "job_description",
+									"value": "We are looking for an experienced AI ML Engineer to join our team. The ideal candidate should have strong experience in machine learning, deep learning, and NLP. Responsibilities include developing and deploying ML models, working with large datasets, and collaborating with cross-functional teams.",
+									"type": "text"
+								},
+								{
+									"key": "difficulty",
+									"value": "medium",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5022/start",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["start"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"company_overview\": \"Hello, I'm MHire from MachineHack. I'll be conducting your interview for AIM Media. Let me provide you with a brief overview of the company...\",\n    \"question\": \"Could you walk me through your background and what interests you about this AI ML Engineer position at AIM Media?\",\n    \"state\": \"introduction\",\n    \"context\": [\n        {\n            \"role\": \"interviewer\",\n            \"message\": \"Company overview...\",\n            \"state\": \"company_overview\"\n        },\n        {\n            \"role\": \"interviewer\",\n            \"message\": \"First question...\",\n            \"state\": \"introduction\"\n        }\n    ]\n}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Submit Response",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"response\": \"I have 5 years of experience in machine learning and deep learning. I've worked on various projects including computer vision, NLP, and time series analysis. I'm particularly interested in AIM Media's focus on AI-driven content creation and analysis.\",\n    \"end_interview\": false\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5022/respond",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "5022",
+					"path": ["respond"]
+				},
+				"description": "Process candidate's response and continue the interview"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"response\": \"I have 5 years of experience in machine learning and deep learning. I've worked on various projects including computer vision, NLP, and time series analysis. I'm particularly interested in AIM Media's focus on AI-driven content creation and analysis.\",\n    \"end_interview\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5022/respond",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["respond"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"message\": \"That's interesting! Could you tell me about a specific ML project you've worked on that you're most proud of?\",\n    \"state\": \"resume_overview\"\n}"
+					}
+				},
+				{
+					"name": "Interview Completion Response",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"response\": \"Thank you for the opportunity. I've enjoyed our conversation.\",\n    \"end_interview\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5022/respond",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["respond"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"status\": \"completed\",\n    \"message\": \"Interview completed. Thank you for participating!\\n\\n### Candidate Summary\\n- **Job Role:** AI ML Engineer\\n- **Total Score:** 8.5/10\\n- **Interview Status:** Ready\\n\\n### Stage-wise Performance\\n- **Introduction:** Strong communication skills, clear articulation of experience (9/10)\\n- **Resume Overview:** Detailed project descriptions, relevant experience (9/10)\\n- **Technical Evaluation:** Excellent problem-solving approach, deep technical knowledge (8/10)\\n- **Behavioral Assessment:** Good examples, clear communication (8/10)\\n- **Cultural Fit:** Aligns well with company values (8/10)\\n\\n### Overall Evaluation\\n1. **Top 3 Strengths:** Technical expertise, Communication skills, Problem-solving\\n2. **Areas for Improvement:** More specific metrics in project descriptions\\n3. **Readiness Flag:** Strong\\n4. **Overall Score:** 8.5/10\",\n    \"state\": \"closing\"\n}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Get Interview Context",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5022/context",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "5022",
+					"path": ["context"]
+				},
+				"description": "Retrieve the complete interview conversation history"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5022/context",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["context"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "[\n    {\n        \"role\": \"interviewer\",\n        \"message\": \"Company overview...\",\n        \"state\": \"company_overview\"\n    },\n    {\n        \"role\": \"interviewer\",\n        \"message\": \"Could you walk me through your background and what interests you about this AI ML Engineer position at AIM Media?\",\n        \"state\": \"introduction\"\n    },\n    {\n        \"role\": \"candidate\",\n        \"message\": \"I have 5 years of experience in machine learning and deep learning. I've worked on various projects including computer vision, NLP, and time series analysis. I'm particularly interested in AIM Media's focus on AI-driven content creation and analysis.\",\n        \"state\": \"introduction\"\n    },\n    {\n        \"role\": \"interviewer\",\n        \"message\": \"That's interesting! Could you tell me about a specific ML project you've worked on that you're most proud of?\",\n        \"state\": \"resume_overview\"\n    }\n]"
+					}
+				}
+			]
+		},
+		{
+			"name": "Get Evaluation",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5022/evaluation",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "5022",
+					"path": ["evaluation"]
+				},
+				"description": "Retrieve the interview evaluation after completion"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5022/evaluation",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["evaluation"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"evaluation\": \"### Candidate Summary\\n- **Job Role:** AI ML Engineer\\n- **Total Score:** 8.5/10\\n- **Interview Status:** Ready\\n\\n### Stage-wise Performance\\n- **Introduction:** Strong communication skills, clear articulation of experience (9/10)\\n- **Resume Overview:** Detailed project descriptions, relevant experience (9/10)\\n- **Technical Evaluation:** Excellent problem-solving approach, deep technical knowledge (8/10)\\n- **Behavioral Assessment:** Good examples, clear communication (8/10)\\n- **Cultural Fit:** Aligns well with company values (8/10)\\n\\n### Overall Evaluation\\n1. **Top 3 Strengths:** Technical expertise, Communication skills, Problem-solving\\n2. **Areas for Improvement:** More specific metrics in project descriptions\\n3. **Readiness Flag:** Strong\\n4. **Overall Score:** 8.5/10\"\n}"
+					}
+				},
+				{
+					"name": "Not Available Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5022/evaluation",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "5022",
+							"path": ["evaluation"]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"error\": \"Evaluation not available yet\"\n}"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5022",
+			"type": "string"
+		}
+	]
+} 
