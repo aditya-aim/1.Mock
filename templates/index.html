@@ -178,14 +178,11 @@ Required Skills:
             // Append the file with the correct field name
             formData.append('resume', resumeFile);
             
-            // Create and append JSON data
-            const jsonData = {
-                company_name: document.getElementById('companyName').value,
-                job_role: document.getElementById('jobRole').value,
-                job_description: document.getElementById('jobDescription').value,
-                difficulty: document.getElementById('difficulty').value
-            };
-            formData.append('data', JSON.stringify(jsonData));
+            // Append form fields individually
+            formData.append('company_name', document.getElementById('companyName').value);
+            formData.append('job_role', document.getElementById('jobRole').value);
+            formData.append('job_description', document.getElementById('jobDescription').value);
+            formData.append('difficulty', document.getElementById('difficulty').value);
 
             // Log FormData contents for debugging
             for (let pair of formData.entries()) {

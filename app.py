@@ -197,6 +197,7 @@ def generate_question(state, candidate_response):
        - First, acknowledge and briefly reflect on the candidate's previous response
        - Then, generate the next interview question that:
          * Builds upon their previous response
+         * Should be relevant to the state State Purpose you are in
          * Is appropriate for the current difficulty level
          * Is relevant to the job role and candidate's background
          * Addresses the purpose of the current state without exposing the state name
